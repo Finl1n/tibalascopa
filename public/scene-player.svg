@@ -1,0 +1,45 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07111f"/>
+      <stop offset="100%" stop-color="#130b0d"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#ffe2a4" stop-opacity="0.78"/>
+      <stop offset="100%" stop-color="#ffcc7a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="kit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ef5e47"/>
+      <stop offset="100%" stop-color="#8f1e18"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d5b44"/>
+      <stop offset="100%" stop-color="#0a1e16"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <ellipse cx="590" cy="220" rx="260" ry="180" fill="url(#halo)"/>
+  <ellipse cx="590" cy="210" rx="430" ry="240" fill="#ffffff" opacity="0.04"/>
+  <path d="M0 560 C240 500, 420 620, 640 560 C860 500, 980 640, 1200 570 L1200 800 L0 800 Z" fill="url(#grass)"/>
+  <g opacity="0.12">
+    <circle cx="100" cy="120" r="3" fill="#fff"/>
+    <circle cx="180" cy="90" r="2" fill="#fff"/>
+    <circle cx="1040" cy="100" r="2" fill="#fff"/>
+    <circle cx="980" cy="150" r="1.6" fill="#fff"/>
+  </g>
+  <g transform="translate(360 120)">
+    <circle cx="160" cy="60" r="46" fill="#ffcfba"/>
+    <path d="M120 92 C150 76, 172 76, 205 92 C214 128, 210 162, 206 200 L117 200 C113 160, 110 124, 120 92 Z" fill="url(#kit)"/>
+    <path d="M116 108 L75 170" stroke="#ffcfba" stroke-width="24" stroke-linecap="round"/>
+    <path d="M212 108 L286 188" stroke="#ffcfba" stroke-width="24" stroke-linecap="round"/>
+    <path d="M134 196 L98 292" stroke="#ffcfba" stroke-width="26" stroke-linecap="round"/>
+    <path d="M192 196 L230 286" stroke="#ffcfba" stroke-width="26" stroke-linecap="round"/>
+    <path d="M56 272 C98 220, 160 220, 230 270" stroke="#fff6e8" stroke-width="14" stroke-linecap="round" opacity="0.8"/>
+    <circle cx="320" cy="300" r="28" fill="#fff"/>
+    <circle cx="320" cy="300" r="14" fill="none" stroke="#111" stroke-width="4"/>
+    <path d="M292 322 C312 286, 338 286, 354 322" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity="0.65"/>
+  </g>
+  <g opacity="0.22">
+    <path d="M0 0 L1200 0 L1200 250 C1000 280, 820 220, 620 230 C400 242, 220 320, 0 270 Z" fill="#ffffff"/>
+  </g>
+</svg>
