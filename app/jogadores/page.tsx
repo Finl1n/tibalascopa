@@ -15,21 +15,25 @@ export default async function JogadoresPage() {
         <div className="panel panel-surface">
           <div className="panel-head">
             <p className="section-label">Fonte</p>
-            <span className="source-chip">{source === "thesportsdb" ? "TheSportsDB free" : "Mock local"}</span>
+            <span className="source-chip">TheSportsDB free</span>
           </div>
         </div>
 
         <div className="panel">
           <div className="list">
-            {items.map((player) => (
-              <div className="list-row" key={player.name}>
-                <div>
-                  <strong>{player.name}</strong>
-                  <p>{player.team}</p>
+            {items.length ? (
+              items.map((player) => (
+                <div className="list-row" key={player.name}>
+                  <div>
+                    <strong>{player.name}</strong>
+                    <p>{player.team}</p>
+                  </div>
+                  <span>{player.stat}</span>
                 </div>
-                <span>{player.stat}</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p>Dados reais indisponiveis no momento.</p>
+            )}
           </div>
         </div>
       </section>

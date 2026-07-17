@@ -106,14 +106,22 @@ function uniqueBy<T>(items: T[], key: (item: T) => string) {
   });
 }
 
+function sortByDateDesc(events: RecordLike[]) {
+  return [...events].sort((left, right) => {
+    const leftDate = new Date(`${readString(left, "dateEvent", "")}T${readString(left, "strTime", "00:00:00")}`);
+    const rightDate = new Date(`${readString(right, "dateEvent", "")}T${readString(right, "strTime", "00:00:00")}`);
+    return rightDate.getTime() - leftDate.getTime();
+  });
+}
+
 export async function getFixturesPageData(): Promise<PageData<FixtureItem[]>> {
-  const [nextResult, pastResult] = await Promise.all([
+  const [nextResult, pastResult] = await Promise.allSettled([
     eventsNextLeague(WORLD_CUP_LEAGUE_ID),
     eventsPastLeague(WORLD_CUP_LEAGUE_ID),
   ]);
 
-  const upcoming = (nextResult.events ?? []) as RecordLike[];
-  const past = (pastResult.events ?? []) as RecordLike[];
+  const upcoming = nextResult.status === "fulfilled" ? ((nextResult.value.events ?? []) as RecordLike[]) : [];
+  const past = pastResult.status === "fulfilled" ? ((pastResult.value.events ?? []) as RecordLike[]) : [];
   const items = mapEvents([...upcoming, ...past]);
 
   return { items, source: "thesportsdb" };
@@ -134,10 +142,15 @@ export async function getPlayersPageData(): Promise<PageData<PlayerItem[]>> {
 
       return idTeam
         ? [
-            lookupAllPlayers(idTeam).then((payload) => ({
-              team: teamName,
-              players: (payload.player ?? []) as RecordLike[],
-            })),
+            lookupAllPlayers(idTeam)
+              .then((payload) => ({
+                team: teamName,
+                players: (payload.player ?? []) as RecordLike[],
+              }))
+              .catch(() => ({
+                team: teamName,
+                players: [] as RecordLike[],
+              })),
           ]
         : [];
     }),
@@ -152,26 +165,32 @@ export async function getPlayersPageData(): Promise<PageData<PlayerItem[]>> {
 }
 
 export async function getHistoryPageData() {
-  const [leagueResult, seasonsResult, pastResult] = await Promise.all([
+  const [leagueResult, seasonsResult, pastResult] = await Promise.allSettled([
     lookupLeague(WORLD_CUP_LEAGUE_ID),
     searchAllSeasons(WORLD_CUP_LEAGUE_ID),
     eventsPastLeague(WORLD_CUP_LEAGUE_ID),
   ]);
 
-  const league = leagueResult.leagues?.[0] as RecordLike | undefined;
-  const seasons = (seasonsResult.seasons ?? []) as RecordLike[];
-  const past = (pastResult.events ?? []) as RecordLike[];
+  const league = leagueResult.status === "fulfilled" ? (leagueResult.value.leagues?.[0] as RecordLike | undefined) : undefined;
+  const seasons =
+    seasonsResult.status === "fulfilled" ? ((seasonsResult.value.seasons ?? []) as RecordLike[]) : [];
+  const past =
+    pastResult.status === "fulfilled" ? sortByDateDesc((pastResult.value.events ?? []) as RecordLike[]) : [];
   const leagueName = readString(league, "strLeague", "FIFA World Cup");
   const country = readString(league, "strCountry", "Global");
+  const recentMatch = past[0];
+  const oldestSeason = seasons[seasons.length - 1];
 
   const facts = [
     seasons.length
-      ? `A base do TheSportsDB traz ${seasons.length} temporadas para ${leagueName}.`
+      ? `A API retornou ${seasons.length} temporadas para ${leagueName}.`
       : `A competicao ${leagueName} esta cadastrada na base gratuita do TheSportsDB.`,
-    past.length
-      ? `Ha ${past.length} jogos recentes disponiveis para consulta na competicao ${leagueName}.`
-      : `Os jogos recentes de ${leagueName} podem ser consultados via eventos da API gratuita.`,
-    `A competicao esta associada a ${country} e pode ser expandida para outras ligas sem trocar a arquitetura.`,
+    recentMatch
+      ? `O jogo mais recente retornado foi ${formatEventTitle(recentMatch)} em ${formatDateTime(recentMatch)}.`
+      : `Nao houve jogo recente retornado para ${leagueName} neste momento.`,
+    oldestSeason
+      ? `A temporada mais antiga visivel na resposta foi ${readString(oldestSeason, "strSeason", "desconhecida")}.`
+      : `A API nao retornou temporada antiga para ${leagueName}.`,
   ];
 
   return {
@@ -179,4 +198,3 @@ export async function getHistoryPageData() {
     source: "thesportsdb",
   };
 }
-

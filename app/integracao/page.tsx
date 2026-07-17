@@ -16,7 +16,7 @@ export default async function IntegracaoPage() {
             <div className="list-row">
               <div>
                 <strong>Fonte ativa</strong>
-                <p>{data.source === "thesportsdb" ? "TheSportsDB free" : "Mock local"}</p>
+                <p>TheSportsDB free</p>
               </div>
               <span>{data.liveFixture.context}</span>
             </div>

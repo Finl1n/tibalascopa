@@ -17,6 +17,7 @@ O tibalascopa foi organizado em camadas para manter a interface, a integracao co
 - camada central em `lib/thesportsdb.ts`
 - rotas internas em `app/api/football/*` como proxy/contrato interno
 - normalizacao dos retornos da API antes de chegar ao front
+- sincronizacao de um catalogo local em `data/catalog/world-cup/catalog.json`
 
 ### IA
 
@@ -44,3 +45,4 @@ flowchart LR
 - toda resposta precisa ser rastreavel
 - cache leve e tratamento de erro sao obrigatorios
 - nao existe mock no fluxo principal
+- o agente deve preferir o catalogo local sempre que ele estiver sincronizado

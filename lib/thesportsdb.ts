@@ -126,9 +126,27 @@ export async function lookupEvent(idEvent: number) {
   });
 }
 
+export async function lookupEventTimeline(idEvent: number) {
+  return fetchSportsDb<{ timeline?: Array<Record<string, unknown>> }>("lookuptimeline.php", {
+    id: idEvent,
+  });
+}
+
+export async function lookupEventResults(idEvent: number) {
+  return fetchSportsDb<{ results?: Array<Record<string, unknown>> }>("eventresults.php", {
+    id: idEvent,
+  });
+}
+
 export async function searchAllLeagues(country: string, sport: string) {
   return fetchSportsDb<{ countries?: Array<Record<string, unknown>> }>("search_all_leagues.php", {
     c: country,
     s: sport,
+  });
+}
+
+export async function searchAllTeams(league: string | number) {
+  return fetchSportsDb<{ teams?: Array<Record<string, unknown>> }>("search_all_teams.php", {
+    l: league,
   });
 }

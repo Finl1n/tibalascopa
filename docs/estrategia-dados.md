@@ -9,6 +9,7 @@ O tibalascopa vai consumir dados reais da API gratuita do TheSportsDB e manter c
 - TheSportsDB v1
 - chave gratuita `123`
 - uso de cache leve no servidor para reduzir chamadas repetidas
+- sincronizacao local do catalogo com dados reais para alimentar a interface e o agente
 
 ## O que vem da API
 
@@ -30,7 +31,14 @@ O tibalascopa vai consumir dados reais da API gratuita do TheSportsDB e manter c
 ## Regra do agente
 
 O agente nunca deve inventar estatistica. Se o dado nao estiver na base, a resposta precisa deixar isso claro.
+Quando a chave `OPENAI_API_KEY` estiver disponivel, a IA reescreve a resposta a partir do contexto real; sem chave, o fallback local permanece ativo.
 
 ## Decisao atual
 
 TheSportsDB free e a fonte oficial do MVP.
+
+## Sincronizacao
+
+- `npm run sync:cup` gera o catalogo local real
+- a saida fica em `data/catalog/world-cup/catalog.json`
+- a rota interna `/api/football/catalog` expoe o catalogo para consumo do app e dos agentes

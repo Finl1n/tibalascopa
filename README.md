@@ -27,6 +27,23 @@ O projeto usa a API gratuita do TheSportsDB.
   - `eventsnextleague.php`
   - `eventspastleague.php`
 
+## Catalogo local
+
+Para evitar depender da API em todas as telas e para preparar o agente com base real, o projeto gera um catalogo local sincronizado a partir da TheSportsDB.
+
+- comando de sincronizacao: `npm run sync:cup`
+- arquivo gerado: `data/catalog/world-cup/catalog.json`
+- rota interna: `/api/football/catalog`
+- a base local e real, nao mockada
+
+## Agente de IA
+
+O agente responde com ajuda de IA quando `OPENAI_API_KEY` estiver configurada.
+
+- modelo padrao: `gpt-5.6-terra`
+- rota do agente: `/api/football/agent`
+- sem chave, o projeto usa fallback local com os mesmos dados reais
+
 ## Estrutura
 
 - `app/` paginas e rotas do Next.js
@@ -45,6 +62,6 @@ O projeto usa a API gratuita do TheSportsDB.
 
 ## Proximo passo
 
-- ampliar a cobertura de ligas
-- ligar o agente ao contexto dos dados reais
-- preparar o deploy e o versionamento no GitHub
+- sincronizar o catalogo completo da Copa
+- ligar o agente ao catalogo local
+- ampliar a cobertura para outras competicoes

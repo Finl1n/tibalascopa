@@ -15,21 +15,25 @@ export default async function JogosPage() {
         <div className="panel panel-surface">
           <div className="panel-head">
             <p className="section-label">Fonte</p>
-            <span className="source-chip">{source === "thesportsdb" ? "TheSportsDB free" : "Mock local"}</span>
+            <span className="source-chip">TheSportsDB free</span>
           </div>
         </div>
 
         <div className="panel">
           <div className="list">
-            {items.map((match) => (
-              <div className="list-row" key={`${match.title}-${match.score}`}>
-                <div>
-                  <strong>{match.title}</strong>
-                  <p>{match.meta}</p>
+            {items.length ? (
+              items.map((match) => (
+                <div className="list-row" key={`${match.title}-${match.score}`}>
+                  <div>
+                    <strong>{match.title}</strong>
+                    <p>{match.meta}</p>
+                  </div>
+                  <span>{match.score}</span>
                 </div>
-                <span>{match.score}</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p>Dados reais indisponiveis no momento.</p>
+            )}
           </div>
         </div>
       </section>

@@ -36,6 +36,12 @@ type LeagueItem = {
   season?: string;
 };
 
+type TeamItem = {
+  name: string;
+  badgeUrl?: string;
+  country?: string;
+};
+
 type HomeData = {
   liveFixture: {
     status: string;
@@ -51,6 +57,7 @@ type HomeData = {
   topScorers: PlayerItem[];
   liveFeed: Array<{ title: string; meta: string }>;
   aiPrompts: string[];
+  featuredTeams: TeamItem[];
   spotlightLeague?: LeagueItem;
   source: "thesportsdb";
 };
@@ -155,7 +162,7 @@ function mapPlayers(players: RecordLike[], fallbackTeam: string): PlayerItem[] {
 }
 
 export async function getHomeData(): Promise<HomeData> {
-  const [leagueResult, seasonsResult, nextResult, pastResult, teamSearchResults] = await Promise.all([
+  const [leagueResult, seasonsResult, nextResult, pastResult, teamSearchResults] = await Promise.allSettled([
     lookupLeague(WORLD_CUP_LEAGUE_ID),
     searchAllSeasons(WORLD_CUP_LEAGUE_ID),
     eventsNextLeague(WORLD_CUP_LEAGUE_ID),
@@ -163,8 +170,9 @@ export async function getHomeData(): Promise<HomeData> {
     Promise.allSettled(PLAYER_SEARCHES.map((name) => searchTeams(name))),
   ]);
 
-  const league = leagueResult.leagues?.[0] as RecordLike | undefined;
-  const seasons = (seasonsResult.seasons ?? []) as RecordLike[];
+  const league = leagueResult.status === "fulfilled" ? (leagueResult.value.leagues?.[0] as RecordLike | undefined) : undefined;
+  const seasons =
+    seasonsResult.status === "fulfilled" ? ((seasonsResult.value.seasons ?? []) as RecordLike[]) : [];
   const latestSeason = readString(seasons[0], "strSeason", readString(league, "strCurrentSeason", ""));
   const leagueName = readString(league, "strLeague", "FIFA World Cup");
   const leagueCountry = readString(league, "strCountry", "Global");
@@ -173,13 +181,17 @@ export async function getHomeData(): Promise<HomeData> {
     lookupTable(WORLD_CUP_LEAGUE_ID).catch(() => ({ table: [] as RecordLike[] })),
   );
 
-  const upcomingEvents = ((nextResult.events ?? []) as RecordLike[]).filter(Boolean);
-  const pastEvents = ((pastResult.events ?? []) as RecordLike[]).filter(Boolean);
+  const upcomingEvents =
+    nextResult.status === "fulfilled" ? (((nextResult.value.events ?? []) as RecordLike[]).filter(Boolean)) : [];
+  const pastEvents =
+    pastResult.status === "fulfilled" ? (((pastResult.value.events ?? []) as RecordLike[]).filter(Boolean)) : [];
   const featuredEvent = pastEvents[0] ?? upcomingEvents[0];
   const standingsRows = (tableResult.table ?? []) as RecordLike[];
+  const teamSearchSettled: PromiseSettledResult<{ teams?: RecordLike[] }>[] =
+    teamSearchResults.status === "fulfilled" ? teamSearchResults.value : [];
 
   const playerCollections = await Promise.all(
-    teamSearchResults.flatMap((result) => {
+    teamSearchSettled.flatMap((result) => {
       if (result.status !== "fulfilled") {
         return [];
       }
@@ -190,10 +202,15 @@ export async function getHomeData(): Promise<HomeData> {
 
       return idTeam
         ? [
-            lookupAllPlayers(idTeam).then((payload) => ({
-              team: teamName,
-              players: (payload.player ?? []) as RecordLike[],
-            })),
+            lookupAllPlayers(idTeam)
+              .then((payload) => ({
+                team: teamName,
+                players: (payload.player ?? []) as RecordLike[],
+              }))
+              .catch(() => ({
+                team: teamName,
+                players: [] as RecordLike[],
+              })),
           ]
         : [];
     }),
@@ -233,9 +250,25 @@ export async function getHomeData(): Promise<HomeData> {
   const appStats = [
     { label: "Competicao", value: leagueName },
     { label: "Temporada", value: latestSeason || "Disponivel na API" },
-    { label: "Jogos", value: String(upcomingEvents.length + pastEvents.length) },
+    { label: "Próximos", value: String(upcomingEvents.length) },
+    { label: "Recentes", value: String(pastEvents.length) },
     { label: "Selecoes", value: String(uniqueBy(playerCollections, (item) => item.team).length || 0) },
   ];
+
+  const featuredTeams = uniqueBy(
+    teamSearchSettled.flatMap((result) => {
+      if (result.status !== "fulfilled") {
+        return [];
+      }
+
+      return ((result.value.teams ?? []) as RecordLike[]).map((team) => ({
+        name: readString(team, "strTeam", "Selecao"),
+        badgeUrl: readString(team, "strBadge", undefined),
+        country: readString(team, "strCountry", undefined),
+      }));
+    }),
+    (team) => team.name,
+  ).slice(0, 3);
 
   const liveFeed = [
     featuredEvent
@@ -264,6 +297,7 @@ export async function getHomeData(): Promise<HomeData> {
     topScorers: topPlayers,
     liveFeed,
     aiPrompts,
+    featuredTeams,
     spotlightLeague: {
       name: leagueName,
       country: leagueCountry,

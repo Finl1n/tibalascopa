@@ -38,8 +38,9 @@ type HomeDashboardProps = {
     topScorers: Array<{ name: string; team: string; stat: string }>;
     liveFeed: Array<{ title: string; meta: string }>;
     aiPrompts: string[];
+    featuredTeams: Array<{ name: string; badgeUrl?: string; country?: string }>;
     spotlightLeague?: { name: string; country: string; season?: string };
-    source: "mock" | "thesportsdb";
+    source: "thesportsdb";
   };
 };
 
@@ -56,7 +57,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
     topScorers,
     liveFeed,
     aiPrompts,
-    source,
+    featuredTeams,
   } = data;
 
   return (
@@ -92,26 +93,28 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
         <article className="panel feature-story">
           <div className="feature-story-media" />
           <div className="feature-story-copy">
-            <p className="section-label">Top story</p>
+            <p className="section-label">Resumo real</p>
             <h1>
               {liveFixture.home} {liveFixture.score} {liveFixture.away}
             </h1>
             <p className="hero-copy">
-              Um feed esportivo editorial com foco em Copa, jogo ao vivo, estatisticas e
-              contexto tatico em uma unica leitura.
+              Consulta em tempo real na TheSportsDB com jogos, tabela, jogadores e historico
+              vindo da API.
             </p>
 
             <div className="hero-pills">
               <span className="hero-pill">{liveFixture.status}</span>
               <span className="hero-pill">{data.spotlightLeague?.name ?? "FIFA World Cup"}</span>
-              <span className="hero-pill">{liveFixture.minute}</span>
+              <span className="hero-pill">{data.spotlightLeague?.season ?? liveFixture.minute}</span>
             </div>
           </div>
 
           <div className="feature-story-footer">
             <div>
-              <span className="feature-label">Radar</span>
-              <strong>Pressao alta, posse curta e decisao no terco final.</strong>
+              <span className="feature-label">Ultimo jogo retornado</span>
+              <strong>
+                {liveFixture.home} {liveFixture.score} {liveFixture.away}
+              </strong>
             </div>
             <div className="hero-actions">
               <Link href="/jogos" className="button button-solid">
@@ -128,21 +131,21 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
           <article className="panel rail-story rail-story-highlight">
             <div className="rail-story-media rail-story-media-stadium" />
             <div className="rail-story-body">
-              <p className="section-label">Live moment</p>
-              <h2>Estadio em combustao.</h2>
-              <p className="muted">
-                Luz, contraste e vibracao para sair do visual quadrado e entrar numa home de
-                portal esportivo.
-              </p>
+              <p className="section-label">Proximo jogo retornado</p>
+              <h2>{featuredMatches[0]?.title ?? "Sem jogo disponivel"}</h2>
+              <p className="muted">{featuredMatches[0]?.meta ?? "A API nao trouxe proximos jogos neste momento."}</p>
             </div>
           </article>
 
           <article className="panel rail-story rail-story-secondary">
             <div className="rail-story-media rail-story-media-trophy" />
             <div className="rail-story-body">
-              <p className="section-label">Cup focus</p>
-              <h2>O peso da taca em cada decisao.</h2>
-              <p className="muted">A narrativa visual agora fica mais proxima de um feed premium.</p>
+              <p className="section-label">Competicao consultada</p>
+              <h2>{data.spotlightLeague?.name ?? "FIFA World Cup"}</h2>
+              <p className="muted">
+                {data.spotlightLeague?.country ?? "Global"}
+                {data.spotlightLeague?.season ? ` · ${data.spotlightLeague.season}` : ""}
+              </p>
             </div>
           </article>
         </aside>
@@ -151,7 +154,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
       <section className="stats-ribbon stats-ribbon-soft" aria-label="Indicadores principais">
         <div className="stats-chip">
           <span>Fonte</span>
-          <strong>{source === "thesportsdb" ? "TheSportsDB free" : "Mock local"}</strong>
+          <strong>TheSportsDB free</strong>
         </div>
         {appStats.map((item) => (
           <div className="stats-chip" key={item.label}>
@@ -163,7 +166,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
 
       <section className="dashboard-grid editorial-grid">
         <article className="panel panel-data panel-data-tall">
-          <SectionTitle label="Tabela" actionHref="/jogos" actionLabel="Atualizar" />
+          <SectionTitle label="Tabela oficial" actionHref="/jogos" actionLabel="Ver jogos" />
           <div className="table-list">
             {standings.map((row, index) => (
               <div className="table-row" key={row.team}>
@@ -184,7 +187,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
         </article>
 
         <article className="panel panel-gallery panel-gallery-wide">
-          <SectionTitle label="Jogos da rodada" actionHref="/jogos" actionLabel="Ver tudo" />
+          <SectionTitle label="Proximos eventos" actionHref="/jogos" actionLabel="Ver tudo" />
           <div className="fixture-stack">
             {featuredMatches.map((match) => (
               <div className="fixture-card" key={match.title}>
@@ -200,7 +203,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
 
         <article className="panel panel-data panel-data-slim">
           <SectionTitle
-            label="Jogadores em destaque"
+            label="Jogadores consultados"
             actionHref="/jogadores"
             actionLabel="Comparar"
           />
@@ -220,7 +223,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
         </article>
 
         <article className="panel visual-panel visual-panel-wide">
-          <SectionTitle label="Feed editorial" actionHref="/historico" actionLabel="Explorar" />
+          <SectionTitle label="Eventos recentes" actionHref="/historico" actionLabel="Explorar" />
           <div className="feed-list">
             {liveFeed.map((item) => (
               <div className="feed-item" key={item.title}>
@@ -229,6 +232,23 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
                   <p>{item.meta}</p>
                 </div>
                 <span className="feed-dot" />
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel panel-data panel-data-slim">
+          <SectionTitle label="Times consultados" actionHref="/jogadores" actionLabel="Abrir" />
+          <div className="table-list">
+            {featuredTeams.map((team) => (
+              <div className="table-row" key={team.name}>
+                <div>
+                  <strong>{team.name}</strong>
+                  <p>{team.country ?? "Pais nao informado"}</p>
+                </div>
+                <div className="table-metrics">
+                  <span>{team.badgeUrl ? "Badge real" : "Sem badge"}</span>
+                </div>
               </div>
             ))}
           </div>
