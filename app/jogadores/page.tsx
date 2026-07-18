@@ -1,18 +1,56 @@
+import Link from "next/link";
+
 import { PageShell } from "@/components/page-shell";
 import { getPlayersPageData } from "@/lib/football/page-data";
+import { includesQuery } from "@/lib/football/search";
 
 export const dynamic = "force-dynamic";
 
-export default async function JogadoresPage() {
+export default async function JogadoresPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    q?: string;
+  }>;
+}) {
   const { items, source } = await getPlayersPageData();
-  const featuredPlayer = items[0];
-  const featuredSupport = items[1];
+  const params = (await searchParams) ?? {};
+  const query = typeof params.q === "string" ? params.q.trim() : "";
+  const visibleItems = query
+    ? items.filter((player) => includesQuery(`${player.name} ${player.team} ${player.stat}`, query))
+    : items;
+  const featuredPlayer = visibleItems[0] ?? items[0];
+  const featuredSupport = visibleItems[1] ?? items[1];
 
   return (
     <PageShell>
       <section className="section-page">
         <p className="eyebrow">Jogadores</p>
         <h1 className="page-title">Elenco e atletas retornados pela API</h1>
+
+        <form className="panel panel-surface search-panel" method="get">
+          <div className="panel-head">
+            <div>
+              <p className="section-label">Filtrar jogadores</p>
+              <strong>Busca por nome, selecao ou posicao</strong>
+            </div>
+            {query ? (
+              <Link href="/jogadores" className="link">
+                Limpar filtro
+              </Link>
+            ) : null}
+          </div>
+
+          <label className="agent-input-wrap search-input">
+            <span>Pesquisar</span>
+            <input
+              name="q"
+              defaultValue={query}
+              placeholder="Ex: Brazil, goalkeeper, Alisson"
+              aria-label="Filtrar jogadores"
+            />
+          </label>
+        </form>
 
         <div className="section-hero">
           <div className="panel section-hero-main">
@@ -24,7 +62,7 @@ export default async function JogadoresPage() {
                 : "A API nao trouxe jogadores neste momento."}
             </p>
             <div className="hero-pills">
-              <span className="hero-pill">{items.length} jogadores retornados</span>
+              <span className="hero-pill">{visibleItems.length} jogadores visiveis</span>
               <span className="hero-pill">Fonte real</span>
               <span className="hero-pill">{source}</span>
             </div>
@@ -52,8 +90,8 @@ export default async function JogadoresPage() {
           </div>
 
           <div className="list">
-            {items.length ? (
-              items.map((player) => (
+            {visibleItems.length ? (
+              visibleItems.map((player) => (
                 <article className="card-row" key={player.name}>
                   <div>
                     <p className="card-row-kicker">Jogador</p>
@@ -65,8 +103,8 @@ export default async function JogadoresPage() {
               ))
             ) : (
               <div className="agent-empty-state">
-                <span>Dados reais indisponiveis</span>
-                <p>Quando a API retornar jogadores, eles aparecem aqui sem preenchimento artificial.</p>
+                <span>Sem resultado no filtro</span>
+                <p>O retorno real existe, mas nada bateu com a busca atual.</p>
               </div>
             )}
           </div>

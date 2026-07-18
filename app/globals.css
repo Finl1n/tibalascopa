@@ -1488,6 +1488,28 @@ a {
   box-shadow: 0 0 0 3px rgba(231, 180, 102, 0.12);
 }
 
+.search-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.search-input input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.search-input input:focus {
+  border-color: rgba(231, 180, 102, 0.45);
+  box-shadow: 0 0 0 3px rgba(231, 180, 102, 0.12);
+}
+
 .shortcut-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
