@@ -37,6 +37,86 @@ function hasAny(text: string, terms: string[]) {
   return terms.some((term) => text.includes(term));
 }
 
+const QUESTION_STOPWORDS = new Set([
+  "qual",
+  "quais",
+  "quem",
+  "foi",
+  "foi",
+  "da",
+  "do",
+  "de",
+  "dos",
+  "das",
+  "o",
+  "a",
+  "os",
+  "as",
+  "na",
+  "no",
+  "em",
+  "para",
+  "por",
+  "com",
+  "um",
+  "uma",
+  "e",
+  "ou",
+  "sobre",
+  "ultimo",
+  "ultima",
+  "recente",
+  "mais",
+  "lista",
+  "listar",
+  "mostra",
+  "mostrar",
+  "traga",
+  "trazer",
+  "me",
+  "pra",
+  "pro",
+]);
+
+function tokenizeQuestion(question: string) {
+  return normalizeText(question)
+    .split(/\s+/)
+    .map((term) => term.replace(/[^a-z0-9-]/g, ""))
+    .filter((term) => term.length > 2 && !QUESTION_STOPWORDS.has(term));
+}
+
+function scoreText(text: string, terms: string[]) {
+  const normalizedText = normalizeText(text);
+
+  if (!normalizedText || !terms.length) {
+    return 0;
+  }
+
+  return terms.reduce((score, term) => {
+    if (!term) {
+      return score;
+    }
+
+    if (normalizedText === term) {
+      return score + 4;
+    }
+
+    if (normalizedText.includes(term)) {
+      return score + 2;
+    }
+
+    return score;
+  }, 0);
+}
+
+function sortByScore<T>(items: T[], score: (item: T) => number) {
+  return [...items]
+    .map((item, index) => ({ item, score: score(item), index }))
+    .filter((entry) => entry.score > 0)
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map((entry) => entry.item);
+}
+
 function unique<T>(items: T[], key: (item: T) => string) {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -134,7 +214,19 @@ function getIntent(question: string): AgentIntent {
 }
 
 function findTeams(question: string, catalog: WorldCupCatalog) {
+  const terms = tokenizeQuestion(question);
   const normalizedQuestion = normalizeText(question);
+
+  const ranked = sortByScore(catalog.teams, (team) => {
+    const teamName = String(team.name ?? "");
+    const country = String(team.country ?? "");
+    return scoreText(teamName, terms) + scoreText(country, terms) + scoreText(teamName, [normalizedQuestion]);
+  });
+
+  if (ranked.length) {
+    return ranked;
+  }
+
   return catalog.teams.filter((team) => {
     const teamName = normalizeText(team.name);
     return teamName.includes(normalizedQuestion) || normalizedQuestion.includes(teamName);
@@ -142,7 +234,24 @@ function findTeams(question: string, catalog: WorldCupCatalog) {
 }
 
 function findPlayers(question: string, catalog: WorldCupCatalog) {
+  const terms = tokenizeQuestion(question);
   const normalizedQuestion = normalizeText(question);
+
+  const ranked = sortByScore(catalog.players as Array<Record<string, unknown>>, (player) => {
+    const fields = [
+      String(player.name ?? player.strPlayer ?? ""),
+      String(player.team ?? player.strTeam ?? ""),
+      String(player.position ?? player.strPosition ?? ""),
+      String(player.nationality ?? player.strNationality ?? ""),
+    ];
+
+    return fields.reduce((score, field) => score + scoreText(field, terms), 0) + scoreText(fields.join(" "), [normalizedQuestion]);
+  });
+
+  if (ranked.length) {
+    return ranked;
+  }
+
   return catalog.players.filter((player) => {
     const playerName = normalizeText(String(player.name ?? ""));
     const teamName = normalizeText(String(player.team ?? ""));
@@ -155,8 +264,21 @@ function findPlayers(question: string, catalog: WorldCupCatalog) {
 }
 
 function findEvents(question: string, catalog: WorldCupCatalog) {
+  const terms = tokenizeQuestion(question);
   const normalizedQuestion = normalizeText(question);
   const events = [...catalog.events.next, ...catalog.events.past];
+  const ranked = sortByScore(events as Array<Record<string, unknown>>, (event) => {
+    const home = String(event.strHomeTeam ?? "");
+    const away = String(event.strAwayTeam ?? "");
+    const venue = String(event.strVenue ?? "");
+    const league = String(event.strLeague ?? "");
+    return scoreText(home, terms) + scoreText(away, terms) + scoreText(venue, terms) + scoreText(league, terms);
+  });
+
+  if (ranked.length) {
+    return ranked;
+  }
+
   return events.filter((event) => {
     const home = normalizeText(String(event.strHomeTeam ?? ""));
     const away = normalizeText(String(event.strAwayTeam ?? ""));
@@ -172,7 +294,23 @@ function findEvents(question: string, catalog: WorldCupCatalog) {
 }
 
 function findGoals(question: string, catalog: WorldCupCatalog) {
+  const terms = tokenizeQuestion(question);
   const normalizedQuestion = normalizeText(question);
+
+  const ranked = sortByScore(catalog.goalEvents, (goal) => {
+    return (
+      scoreText(goal.scorer, terms) +
+      scoreText(goal.team, terms) +
+      scoreText(goal.homeTeam, terms) +
+      scoreText(goal.awayTeam, terms) +
+      scoreText(goal.venue, terms)
+    );
+  });
+
+  if (ranked.length) {
+    return ranked;
+  }
+
   return catalog.goalEvents.filter((goal) => {
     const scorer = normalizeText(goal.scorer);
     const team = normalizeText(goal.team);
