@@ -1,5 +1,5 @@
 export const aiPrompts = [
-  "Quem fez gol no ultimo jogo?",
+  "Quem fez o ultimo gol e em qual partida?",
   "Qual foi a partida mais recente retornada?",
   "Quais selecoes estao no catalogo?",
 ];

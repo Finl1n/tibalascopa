@@ -288,6 +288,7 @@ function buildGoalAnswer(question: string, catalog: WorldCupCatalog): LocalAgent
     const rightDate = new Date(`${right.dateEvent}T00:00:00`);
     return rightDate.getTime() - leftDate.getTime();
   });
+  const latestGoal = allGoals[0];
 
   if (matches.length) {
     const top = matches[0];
@@ -302,6 +303,18 @@ function buildGoalAnswer(question: string, catalog: WorldCupCatalog): LocalAgent
     };
   }
 
+  if (latestGoal) {
+    return {
+      answer: `${latestGoal.scorer} fez o gol mais recente registrado na partida ${latestGoal.homeTeam} x ${latestGoal.awayTeam}, aos ${latestGoal.minute}'.${latestGoal.assist ? ` A assistencia foi de ${latestGoal.assist}.` : ""}`,
+      evidence: [
+        `Time: ${latestGoal.team}.`,
+        latestGoal.venue ? `Estadio: ${latestGoal.venue}.` : "Estadio nao informado.",
+      ],
+      matches: mapGoals(allGoals, 6),
+      sources: BASE_SOURCES,
+    };
+  }
+
   if (!allGoals.length) {
     return {
       answer: "A base sincronizada ainda nao tem eventos de gol detalhados para responder com seguranca quem marcou em cada partida.",
@@ -312,7 +325,7 @@ function buildGoalAnswer(question: string, catalog: WorldCupCatalog): LocalAgent
   }
 
   return {
-    answer: `A base tem ${allGoals.length} gols registrados. Se voce me disser a selecao ou a partida, eu te devolvo exatamente quem marcou e em qual jogo.`,
+    answer: `A base tem ${allGoals.length} gols registrados. Se voce me disser a selecao, a partida ou o jogador, eu fecho a resposta com precisao.`,
     evidence: ["Os gols vieram da timeline oficial do evento."],
     matches: mapGoals(allGoals, 6),
     sources: BASE_SOURCES,
