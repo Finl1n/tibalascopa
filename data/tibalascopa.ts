@@ -1,7 +1,7 @@
 export const aiPrompts = [
-  "Qual selecao tem mais jogos recentes registrados na API?",
-  "Quais partidas retornaram como proximos jogos da competicao?",
-  "Quais jogadores aparecem nas selecoes consultadas?",
+  "Quem fez gol no ultimo jogo?",
+  "Qual foi a partida mais recente retornada?",
+  "Quais selecoes estao no catalogo?",
 ];
 
 export const navLinks: Array<{ label: string; href: string }> = [

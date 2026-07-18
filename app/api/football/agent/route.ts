@@ -6,6 +6,37 @@ export const dynamic = "force-dynamic";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL ?? "gpt-5.6-terra";
 
+function extractResponseText(payload: Record<string, unknown>) {
+  const directText = payload.output_text;
+  if (typeof directText === "string" && directText.trim()) {
+    return directText.trim();
+  }
+
+  const output = Array.isArray(payload.output) ? payload.output : [];
+
+  for (const item of output) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const candidate = item as Record<string, unknown>;
+    const content = Array.isArray(candidate.content) ? candidate.content : [];
+
+    for (const contentItem of content) {
+      if (!contentItem || typeof contentItem !== "object") {
+        continue;
+      }
+
+      const text = (contentItem as Record<string, unknown>).text;
+      if (typeof text === "string" && text.trim()) {
+        return text.trim();
+      }
+    }
+  }
+
+  return null;
+}
+
 async function callOpenAI(question: string) {
   if (!OPENAI_API_KEY) {
     return null;
@@ -24,13 +55,15 @@ async function callOpenAI(question: string) {
     "Se a pergunta for sobre gols, indique jogador, partida, minuto e assistencia quando existir.",
     "Se houver ambiguidade, diga exatamente o que falta para responder.",
     "Nao invente nomes, numeros ou jogos.",
+    "Nao use markdown.",
+    "Responda em no maximo 4 frases.",
     "",
     `Pergunta: ${question}`,
     "",
     `Contexto estruturado:\n${JSON.stringify(context, null, 2)}`,
   ].join("\n");
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -38,19 +71,11 @@ async function callOpenAI(question: string) {
     },
     body: JSON.stringify({
       model: OPENAI_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Voce e um assistente de futebol para o projeto tibalascopa. So pode usar o contexto entregue pelo backend e nunca deve inventar dados.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
+      instructions:
+        "Voce e um assistente de futebol para o projeto tibalascopa. So pode usar o contexto entregue pelo backend e nunca deve inventar dados.",
+      input: prompt,
       temperature: 0.2,
-      max_completion_tokens: 500,
+      max_output_tokens: 250,
     }),
   });
 
@@ -59,11 +84,8 @@ async function callOpenAI(question: string) {
     throw new Error(`OpenAI request failed: ${response.status} ${response.statusText} - ${details}`);
   }
 
-  const payload = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string | null } }>;
-  };
-
-  return payload.choices?.[0]?.message?.content?.trim() ?? null;
+  const payload = (await response.json()) as Record<string, unknown>;
+  return extractResponseText(payload);
 }
 
 export async function POST(request: Request) {

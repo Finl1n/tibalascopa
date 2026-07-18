@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { ReactNode } from "react";
 
 function SectionTitle({
@@ -40,6 +40,14 @@ type HomeDashboardProps = {
     aiPrompts: string[];
     featuredTeams: Array<{ name: string; badgeUrl?: string; country?: string }>;
     spotlightLeague?: { name: string; country: string; season?: string };
+    goalHighlight?: {
+      scorer: string;
+      assist?: string;
+      minute: string;
+      match: string;
+      team: string;
+      date: string;
+    };
     source: "thesportsdb";
   };
 };
@@ -58,6 +66,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
     liveFeed,
     aiPrompts,
     featuredTeams,
+    goalHighlight,
   } = data;
 
   return (
@@ -116,6 +125,14 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
                 {liveFixture.home} {liveFixture.score} {liveFixture.away}
               </strong>
             </div>
+            <div className="feature-foot-notes">
+              <span className="source-chip">Resumo editorial</span>
+              <p>
+                {goalHighlight
+                  ? `Ultimo gol capturado: ${goalHighlight.scorer} em ${goalHighlight.match}.`
+                  : "A base sincronizada ainda nao registrou um gol de destaque para esta rodada."}
+              </p>
+            </div>
             <div className="hero-actions">
               <Link href="/jogos" className="button button-solid">
                 Abrir rodada
@@ -145,6 +162,19 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
               <p className="muted">
                 {data.spotlightLeague?.country ?? "Global"}
                 {data.spotlightLeague?.season ? ` · ${data.spotlightLeague.season}` : ""}
+              </p>
+            </div>
+          </article>
+
+          <article className="panel rail-story rail-story-goal">
+            <div className="rail-story-media rail-story-media-goal" />
+            <div className="rail-story-body">
+              <p className="section-label">Ultimo gol registrado</p>
+              <h2>{goalHighlight?.scorer ?? "Gol nao disponivel"}</h2>
+              <p className="muted">
+                {goalHighlight
+                  ? `${goalHighlight.team} · ${goalHighlight.match} · ${goalHighlight.minute}'`
+                  : "Assim que a timeline trouxer gols, esse bloco mostra o autor, a partida e o minuto."}
               </p>
             </div>
           </article>
@@ -266,3 +296,4 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
     </main>
   );
 }
+

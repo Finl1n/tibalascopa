@@ -42,6 +42,7 @@ O agente responde com ajuda de IA quando `OPENAI_API_KEY` estiver configurada.
 
 - modelo padrao: `gpt-5.6-terra`
 - rota do agente: `/api/football/agent`
+- integracao oficial: Responses API da OpenAI
 - sem chave, o projeto usa fallback local com os mesmos dados reais
 
 ## Estrutura

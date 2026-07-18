@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type AgentReply = {
   ready: boolean;
@@ -12,15 +12,25 @@ type AgentReply = {
   mode: "local" | "openai";
 };
 
-type AgentConsoleProps = {
-  prompts: string[];
+type AgentShortcut = {
+  label: string;
+  prompt: string;
+  hint: string;
 };
 
-export function AgentConsole({ prompts }: AgentConsoleProps) {
-  const [question, setQuestion] = useState(prompts[0] ?? "");
+type AgentConsoleProps = {
+  shortcuts: AgentShortcut[];
+};
+
+export function AgentConsole({ shortcuts }: AgentConsoleProps) {
+  const [question, setQuestion] = useState(shortcuts[0]?.prompt ?? "");
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState<AgentReply | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const activeShortcut = useMemo(
+    () => shortcuts.find((item) => item.prompt === question) ?? null,
+    [question, shortcuts],
+  );
 
   async function runQuery(input: string) {
     const trimmed = input.trim();
@@ -57,96 +67,132 @@ export function AgentConsole({ prompts }: AgentConsoleProps) {
   }
 
   return (
-    <div className="list">
-      <div className="prompt-box">
-        <span>Pergunta</span>
-        <textarea
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-          placeholder="Pergunte sobre selecoes, jogadores, jogos ou historico"
-          rows={4}
-          style={{
-            width: "100%",
-            resize: "vertical",
-            marginTop: "0.75rem",
-            border: "0",
-            outline: "none",
-            background: "transparent",
-            color: "inherit",
-            font: "inherit",
-          }}
-        />
-      </div>
-
-      <div className="hero-actions">
-        <button className="button button-solid" onClick={() => runQuery(question)} disabled={loading}>
-          {loading ? "Consultando..." : "Perguntar"}
-        </button>
-        <button className="button button-ghost" onClick={() => setQuestion(prompts[0] ?? "")}>
-          Recarregar exemplo
-        </button>
-      </div>
-
-      <div className="hero-pills">
-        {prompts.slice(0, 3).map((prompt) => (
-          <button
-            key={prompt}
-            className="hero-pill"
-            type="button"
-            onClick={() => {
-              setQuestion(prompt);
-              void runQuery(prompt);
-            }}
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
-
-      {error ? (
-        <div className="panel panel-surface">
-          <strong>Erro</strong>
-          <p className="muted">{error}</p>
+    <div className="agent-console">
+      <div className="agent-compose panel">
+        <div className="panel-head">
+          <div>
+            <p className="section-label">Perguntar</p>
+            <h3>Use a base real e receba respostas com contexto.</h3>
+          </div>
+          <span className="source-chip">{reply?.mode === "openai" ? "IA ativa" : "Fallback local"}</span>
         </div>
-      ) : null}
 
-      {reply ? (
-        <div className="panel panel-surface">
-          <strong>Resposta</strong>
-          <p className="muted">{reply.answer}</p>
+        <p className="muted agent-help">
+          Tente consultas objetivas. Por exemplo: gol marcado, partida mais recente, selecao especifica ou
+          resumo da base.
+        </p>
 
-          {reply.evidence.length ? (
-            <div className="facts" style={{ marginTop: "1rem" }}>
+        <label className="agent-input-wrap">
+          <span>Pergunta</span>
+          <textarea
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            placeholder="Ex: Quem fez gol no ultimo jogo?"
+            rows={4}
+          />
+        </label>
+
+        <div className="hero-actions">
+          <button className="button button-solid" onClick={() => runQuery(question)} disabled={loading}>
+            {loading ? "Consultando..." : "Perguntar"}
+          </button>
+          <button className="button button-ghost" onClick={() => setQuestion(shortcuts[0]?.prompt ?? "")}>
+            Recarregar exemplo
+          </button>
+        </div>
+
+        <div className="shortcut-grid">
+          {shortcuts.map((shortcut) => (
+            <button
+              key={shortcut.prompt}
+              type="button"
+              className={`shortcut-card${activeShortcut?.prompt === shortcut.prompt ? " shortcut-card-active" : ""}`}
+              onClick={() => {
+                setQuestion(shortcut.prompt);
+                void runQuery(shortcut.prompt);
+              }}
+            >
+              <strong>{shortcut.label}</strong>
+              <span>{shortcut.hint}</span>
+            </button>
+          ))}
+        </div>
+
+        {error ? (
+          <div className="agent-response agent-response-error">
+            <strong>Erro</strong>
+            <p>{error}</p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="agent-response-stack">
+        <div className="agent-response agent-response-hero">
+          <div className="panel-head">
+            <div>
+              <p className="section-label">Resposta</p>
+              <h3>{reply ? reply.answer : "Aguardando sua pergunta"}</h3>
+            </div>
+            <span className="source-chip">{reply?.ready ? "Base pronta" : "Pronta para consulta"}</span>
+          </div>
+
+          <p className="muted">
+            {reply
+              ? `Pergunta interpretada: ${reply.question}`
+              : "As respostas mostram fonte, evidencia e trechos relacionados para manter rastreabilidade."}
+          </p>
+
+          {reply?.evidence.length ? (
+            <div className="facts">
               {reply.evidence.map((item) => (
                 <p key={item}>{item}</p>
               ))}
             </div>
-          ) : null}
+          ) : (
+            <div className="agent-empty-state">
+              <span>Use os atalhos para iniciar.</span>
+              <p>Assim que a pergunta rodar, a resposta vai aparecer aqui com dados reais.</p>
+            </div>
+          )}
+        </div>
 
-          {reply.matches.length ? (
-            <div className="list" style={{ marginTop: "1rem" }}>
+        <div className="agent-response agent-response-list">
+          <div className="panel-head">
+            <p className="section-label">Evidencias</p>
+            <span className="source-chip">{reply?.matches.length ?? 0} itens</span>
+          </div>
+
+          {reply?.matches.length ? (
+            <div className="agent-match-list">
               {reply.matches.map((item) => (
-                <div className="list-row" key={`${item.label}-${item.detail}`}>
-                  <div>
-                    <strong>{item.label}</strong>
-                    <p>{item.detail}</p>
-                  </div>
-                </div>
+                <article key={`${item.label}-${item.detail}`} className="agent-match-item">
+                  <strong>{item.label}</strong>
+                  <p>{item.detail}</p>
+                </article>
               ))}
             </div>
-          ) : null}
+          ) : (
+            <div className="agent-empty-state">
+              <span>Nenhuma evidencia ainda.</span>
+              <p>O agente vai preencher esta lista com selecoes, jogos, jogadores ou gols encontrados.</p>
+            </div>
+          )}
+        </div>
 
-          <div className="hero-pills" style={{ marginTop: "1rem" }}>
-            <span className="hero-pill">{reply.ready ? "Base pronta" : "Base ausente"}</span>
-            <span className="hero-pill">{reply.mode === "openai" ? "IA ativa" : "Fallback local"}</span>
-            {reply.sources.map((source) => (
+        <div className="agent-response agent-response-footer">
+          <div className="panel-head">
+            <p className="section-label">Fontes</p>
+            <span className="source-chip">{reply?.mode === "openai" ? "OpenAI + TheSportsDB" : "TheSportsDB"} </span>
+          </div>
+          <div className="hero-pills">
+            {(reply?.sources ?? ["TheSportsDB free", "catalogo local"]).map((source) => (
               <span className="hero-pill" key={source}>
                 {source}
               </span>
             ))}
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

@@ -246,6 +246,18 @@ a {
   padding: 0 26px 26px;
 }
 
+.feature-foot-notes {
+  display: grid;
+  gap: 8px;
+  max-width: 32ch;
+}
+
+.feature-foot-notes p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .feature-label {
   display: block;
   color: var(--gold);
@@ -292,7 +304,19 @@ a {
   background-position: center;
 }
 
+.rail-story-goal {
+  background:
+    linear-gradient(180deg, rgba(5, 7, 11, 0.14), rgba(5, 7, 11, 0.88)),
+    url("/scene-player.svg");
+  background-size: cover;
+  background-position: center;
+}
+
 .rail-story-media {
+  min-height: 220px;
+}
+
+.rail-story-media-goal {
   min-height: 220px;
 }
 
@@ -1278,6 +1302,91 @@ a {
   gap: 16px;
 }
 
+.section-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.section-hero-main {
+  min-height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.section-hero-side {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-side-card {
+  min-height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.hero-side-card-soft {
+  background:
+    linear-gradient(180deg, rgba(16, 18, 28, 0.84), rgba(8, 10, 16, 0.96)),
+    linear-gradient(135deg, rgba(143, 99, 255, 0.12), rgba(110, 215, 230, 0.06));
+}
+
+.hero-side-card strong {
+  font-family: var(--font-head), Georgia, serif;
+  font-size: 1.4rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.hero-side-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.card-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.card-row strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.card-row p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.card-row span {
+  color: var(--gold);
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.card-row-kicker {
+  margin: 0 0 6px;
+  color: var(--steel);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.68rem;
+}
+
 .eyebrow {
   margin: 0;
   color: var(--gold);
@@ -1294,10 +1403,214 @@ a {
   letter-spacing: -0.04em;
 }
 
+.agent-stage {
+  display: grid;
+  gap: 18px;
+}
+
+.agent-intro {
+  display: grid;
+  gap: 16px;
+}
+
+.agent-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.agent-note-card {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(143, 99, 255, 0.08));
+}
+
+.agent-note-card strong {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-head), Georgia, serif;
+  font-size: 1.05rem;
+}
+
+.agent-note-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.agent-console {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.agent-compose,
+.agent-response {
+  border-radius: 30px;
+  padding: 24px;
+}
+
+.agent-help {
+  margin: 6px 0 0;
+}
+
+.agent-input-wrap {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.agent-input-wrap span {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.68rem;
+}
+
+.agent-input-wrap textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.agent-input-wrap textarea:focus {
+  border-color: rgba(231, 180, 102, 0.45);
+  box-shadow: 0 0 0 3px rgba(231, 180, 102, 0.12);
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.shortcut-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  text-align: left;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.shortcut-card:hover,
+.shortcut-card-active {
+  transform: translateY(-1px);
+  border-color: rgba(231, 180, 102, 0.4);
+  background: rgba(231, 180, 102, 0.08);
+}
+
+.shortcut-card strong {
+  font-size: 0.98rem;
+}
+
+.shortcut-card span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.agent-response-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.agent-response {
+  display: grid;
+  gap: 16px;
+  background:
+    linear-gradient(180deg, rgba(16, 18, 28, 0.82), rgba(8, 10, 16, 0.96)),
+    var(--panel);
+}
+
+.agent-response-hero h3,
+.agent-response-list h3 {
+  margin: 0;
+  font-family: var(--font-head), Georgia, serif;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.05;
+}
+
+.agent-response-error {
+  border-color: rgba(255, 124, 124, 0.24);
+}
+
+.agent-response-error p {
+  margin: 8px 0 0;
+  color: #ffd1d1;
+}
+
+.agent-match-list {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-match-item {
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.agent-match-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.agent-match-item p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.agent-empty-state {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.agent-empty-state span {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+}
+
+.agent-empty-state p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 @media (max-width: 1120px) {
   .hero-stage,
   .dashboard-grid,
   .dashboard-grid-dense {
+    grid-template-columns: 1fr;
+  }
+
+  .section-hero,
+  .agent-console {
     grid-template-columns: 1fr;
   }
 
@@ -1319,6 +1632,11 @@ a {
 
   .stats-ribbon {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .agent-notes,
+  .shortcut-grid {
+    grid-template-columns: 1fr;
   }
 }
 

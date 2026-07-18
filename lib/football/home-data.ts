@@ -1,4 +1,5 @@
 import { aiPrompts } from "@/data/tibalascopa";
+import { loadWorldCupCatalog } from "@/lib/football/catalog";
 import {
   eventsNextLeague,
   eventsPastLeague,
@@ -42,6 +43,15 @@ type TeamItem = {
   country?: string;
 };
 
+type GoalHighlight = {
+  scorer: string;
+  assist?: string;
+  minute: string;
+  match: string;
+  team: string;
+  date: string;
+};
+
 type HomeData = {
   liveFixture: {
     status: string;
@@ -59,6 +69,7 @@ type HomeData = {
   aiPrompts: string[];
   featuredTeams: TeamItem[];
   spotlightLeague?: LeagueItem;
+  goalHighlight?: GoalHighlight;
   source: "thesportsdb";
 };
 
@@ -162,6 +173,7 @@ function mapPlayers(players: RecordLike[], fallbackTeam: string): PlayerItem[] {
 }
 
 export async function getHomeData(): Promise<HomeData> {
+  const catalog = await loadWorldCupCatalog().catch(() => null);
   const [leagueResult, seasonsResult, nextResult, pastResult, teamSearchResults] = await Promise.allSettled([
     lookupLeague(WORLD_CUP_LEAGUE_ID),
     searchAllSeasons(WORLD_CUP_LEAGUE_ID),
@@ -270,6 +282,18 @@ export async function getHomeData(): Promise<HomeData> {
     (team) => team.name,
   ).slice(0, 3);
 
+  const latestGoal = catalog?.goalEvents?.[0];
+  const goalHighlight = latestGoal
+    ? {
+        scorer: latestGoal.scorer,
+        assist: latestGoal.assist || undefined,
+        minute: latestGoal.minute,
+        match: latestGoal.eventTitle,
+        team: latestGoal.team,
+        date: latestGoal.dateEvent,
+      }
+    : undefined;
+
   const liveFeed = [
     featuredEvent
       ? {
@@ -303,6 +327,7 @@ export async function getHomeData(): Promise<HomeData> {
       country: leagueCountry,
       season: latestSeason || undefined,
     },
+    goalHighlight,
     source: "thesportsdb",
   };
 }
