@@ -69,6 +69,9 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
     goalHighlight,
   } = data;
 
+  const spotlightTeam = featuredTeams[0];
+  const spotlightPlayer = topScorers[0];
+
   return (
     <main className="shell app-shell app-shell-cinematic">
       <header className="site-header site-header-app">
@@ -154,14 +157,26 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
             </div>
           </article>
 
-          <article className="panel rail-story rail-story-secondary">
+          <article className="panel rail-story rail-story-team">
             <div className="rail-story-media rail-story-media-trophy" />
             <div className="rail-story-body">
-              <p className="section-label">Competicao consultada</p>
-              <h2>{data.spotlightLeague?.name ?? "FIFA World Cup"}</h2>
+              <p className="section-label">Contexto editorial</p>
+              <h2>{spotlightTeam?.name ?? "Selecao em destaque"}</h2>
               <p className="muted">
-                {data.spotlightLeague?.country ?? "Global"}
-                {data.spotlightLeague?.season ? ` · ${data.spotlightLeague.season}` : ""}
+                {spotlightTeam
+                  ? `${spotlightTeam.country ?? "Pais nao informado"} · ${spotlightTeam.badgeUrl ? "Badge real" : "Sem badge"}`
+                  : "A base ainda nao trouxe selecoes para destacar."}
+              </p>
+            </div>
+          </article>
+
+          <article className="panel rail-story rail-story-player">
+            <div className="rail-story-media rail-story-media-player" />
+            <div className="rail-story-body">
+              <p className="section-label">Jogador em destaque</p>
+              <h2>{spotlightPlayer?.name ?? "Jogador em destaque"}</h2>
+              <p className="muted">
+                {spotlightPlayer ? `${spotlightPlayer.team} · ${spotlightPlayer.stat}` : "A base ainda nao trouxe jogadores para destacar."}
               </p>
             </div>
           </article>
@@ -192,6 +207,25 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
             <strong>{item.value}</strong>
           </div>
         ))}
+      </section>
+
+      <section className="stats-ribbon stats-ribbon-soft" aria-label="Atalhos de consulta">
+        <Link href="/jogos?q=England" className="stats-chip">
+          <span>Jogos</span>
+          <strong>Buscar England</strong>
+        </Link>
+        <Link href="/jogadores?q=Brazil" className="stats-chip">
+          <span>Jogadores</span>
+          <strong>Buscar Brazil</strong>
+        </Link>
+        <Link href="/historico?q=1930" className="stats-chip">
+          <span>Historico</span>
+          <strong>Filtrar 1930</strong>
+        </Link>
+        <Link href="/agente" className="stats-chip">
+          <span>Agente</span>
+          <strong>Pergunta direta</strong>
+        </Link>
       </section>
 
       <section className="dashboard-grid editorial-grid">

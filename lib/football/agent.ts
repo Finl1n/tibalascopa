@@ -233,6 +233,33 @@ function findTeams(question: string, catalog: WorldCupCatalog) {
   });
 }
 
+function findBestTeam(question: string, catalog: WorldCupCatalog) {
+  return findTeams(question, catalog)[0] ?? null;
+}
+
+function findTeamGoals(teamName: string, catalog: WorldCupCatalog) {
+  const normalizedTeam = normalizeText(teamName);
+
+  return [...catalog.goalEvents]
+    .filter((goal) => {
+      const goalTeam = normalizeText(goal.team);
+      const homeTeam = normalizeText(goal.homeTeam);
+      const awayTeam = normalizeText(goal.awayTeam);
+
+      return (
+        goalTeam.includes(normalizedTeam) ||
+        normalizedTeam.includes(goalTeam) ||
+        homeTeam.includes(normalizedTeam) ||
+        awayTeam.includes(normalizedTeam)
+      );
+    })
+    .sort((left, right) => {
+      const leftDate = new Date(`${left.dateEvent}T00:00:00`);
+      const rightDate = new Date(`${right.dateEvent}T00:00:00`);
+      return rightDate.getTime() - leftDate.getTime();
+    });
+}
+
 function findPlayers(question: string, catalog: WorldCupCatalog) {
   const terms = tokenizeQuestion(question);
   const normalizedQuestion = normalizeText(question);
@@ -261,6 +288,10 @@ function findPlayers(question: string, catalog: WorldCupCatalog) {
       teamName.includes(normalizedQuestion)
     );
   });
+}
+
+function findBestPlayer(question: string, catalog: WorldCupCatalog) {
+  return findPlayers(question, catalog)[0] ?? null;
 }
 
 function findEvents(question: string, catalog: WorldCupCatalog) {
@@ -351,12 +382,17 @@ function buildTeamAnswer(question: string, catalog: WorldCupCatalog): LocalAgent
     const top = matches[0];
     const teamPlayers = catalog.playersByTeam[String(top.idTeam)] ?? [];
     const fallbackPlayers = catalog.players.filter((player) => normalizeText(String(player.team ?? "")) === normalizeText(top.name));
+    const relatedGoals = findTeamGoals(top.name, catalog);
+    const latestGoal = relatedGoals[0];
 
     return {
-      answer: `Encontrei a selecao ${top.name} no catalogo. Ela tem ${teamPlayers.length || fallbackPlayers.length} jogadores listados na base sincronizada.`,
+      answer: latestGoal
+        ? `Encontrei a selecao ${top.name} no catalogo. Ela tem ${teamPlayers.length || fallbackPlayers.length} jogadores listados e o gol mais recente associado foi de ${latestGoal.scorer} na partida ${latestGoal.homeTeam} x ${latestGoal.awayTeam}.`
+        : `Encontrei a selecao ${top.name} no catalogo. Ela tem ${teamPlayers.length || fallbackPlayers.length} jogadores listados na base sincronizada.`,
       evidence: [
         top.country ? `Pais: ${top.country}.` : "Pais nao informado na API.",
         top.badgeUrl ? "Badge oficial disponivel." : "Badge nao retornada pela API.",
+        latestGoal ? `Ultimo gol relacionado: ${latestGoal.scorer} aos ${latestGoal.minute}'.` : "Nenhum gol relacionado foi encontrado na timeline.",
       ],
       matches: [
         {
@@ -364,6 +400,7 @@ function buildTeamAnswer(question: string, catalog: WorldCupCatalog): LocalAgent
           detail: [top.country ?? "Pais nao informado", `ID ${top.idTeam}`].join(" · "),
         },
         ...mapPlayers(teamPlayers.length ? (teamPlayers as Array<Record<string, unknown>>) : (fallbackPlayers as Array<Record<string, unknown>>), top.name, 5),
+        ...mapGoals(relatedGoals, 4),
       ],
       sources: BASE_SOURCES,
     };
@@ -378,14 +415,40 @@ function buildTeamAnswer(question: string, catalog: WorldCupCatalog): LocalAgent
 }
 
 function buildPlayerAnswer(question: string, catalog: WorldCupCatalog): LocalAgentResponse {
-  const matches = findPlayers(question, catalog);
+  const bestPlayer = findBestPlayer(question, catalog);
+  const team = findBestTeam(question, catalog);
 
-  if (matches.length) {
-    const top = matches[0];
+  if (bestPlayer) {
+    const playerTeam = String(bestPlayer.team ?? bestPlayer.strTeam ?? "");
+    const playerPosition = String(bestPlayer.position ?? bestPlayer.strPosition ?? "");
+    const playerName = String(bestPlayer.name ?? bestPlayer.strPlayer ?? "Jogador");
+    const teamGoals = team ? findTeamGoals(team.name, catalog) : [];
+
+    const sameTeamPlayers =
+      team && team.idTeam
+        ? catalog.playersByTeam[String(team.idTeam)] ?? []
+        : catalog.players.filter(
+            (player) => normalizeText(String(player.team ?? "")) === normalizeText(team?.name ?? playerTeam),
+          );
+
     return {
-      answer: `Encontrei jogador(es) relacionado(s) a sua pergunta. O destaque principal foi ${String(top.name ?? top.label)}.`,
-      evidence: [`Jogadores totais na base: ${catalog.players.length}.`],
-      matches: mapPlayers(matches as Array<Record<string, unknown>>, "", 6),
+      answer: team
+        ? `Encontrei ${playerName} e a selecao ${team.name} na mesma consulta. ${playerName} aparece em ${playerTeam || "uma equipe nao informada"}${playerPosition ? `, atuando como ${playerPosition}` : ""}.`
+        : `Encontrei ${playerName} relacionado a sua pergunta${playerTeam ? ` em ${playerTeam}` : ""}${playerPosition ? `, atuando como ${playerPosition}` : ""}.`,
+      evidence: [
+        `Jogadores totais na base: ${catalog.players.length}.`,
+        team ? `Selecao associada: ${team.name}.` : "Nenhuma selecao especifica foi extraida da pergunta.",
+        teamGoals.length ? `Ultimo gol da selecao: ${teamGoals[0].scorer} em ${teamGoals[0].homeTeam} x ${teamGoals[0].awayTeam}.` : "Nenhum gol da selecao foi encontrado na timeline.",
+      ],
+      matches: [
+        {
+          label: playerName,
+          detail: [playerTeam, playerPosition].filter(Boolean).join(" Â· "),
+        },
+        ...(team ? [{ label: team.name, detail: team.country ?? "Pais nao informado" }] : []),
+        ...mapPlayers(sameTeamPlayers as Array<Record<string, unknown>>, team?.name ?? playerTeam, 5),
+        ...mapGoals(teamGoals, 4),
+      ],
       sources: BASE_SOURCES,
     };
   }
