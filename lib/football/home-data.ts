@@ -52,6 +52,12 @@ type GoalHighlight = {
   date: string;
 };
 
+type HomeHighlight = {
+  label: string;
+  title: string;
+  meta: string;
+};
+
 type HomeData = {
   liveFixture: {
     status: string;
@@ -70,6 +76,7 @@ type HomeData = {
   featuredTeams: TeamItem[];
   spotlightLeague?: LeagueItem;
   goalHighlight?: GoalHighlight;
+  highlights: HomeHighlight[];
   source: "thesportsdb";
 };
 
@@ -282,6 +289,8 @@ export async function getHomeData(): Promise<HomeData> {
     (team) => team.name,
   ).slice(0, 3);
 
+  const spotlightTeam = featuredTeams[0];
+  const spotlightPlayer = topPlayers[0];
   const latestGoal = catalog?.goalEvents?.[0];
   const goalHighlight = latestGoal
     ? {
@@ -313,6 +322,44 @@ export async function getHomeData(): Promise<HomeData> {
     },
   ].filter((item): item is { title: string; meta: string } => Boolean(item));
 
+  const highlights: HomeHighlight[] = [
+    spotlightTeam
+      ? {
+          label: "Selecao em alta",
+          title: spotlightTeam.name,
+          meta: [spotlightTeam.country ?? "Pais nao informado", spotlightTeam.badgeUrl ? "Badge real" : "Sem badge"]
+            .filter(Boolean)
+            .join(" · "),
+        }
+      : {
+          label: "Selecao em alta",
+          title: leagueName,
+          meta: "Base ainda sem selecao destacada",
+        },
+    topPlayers[0]
+      ? {
+          label: "Jogador em alta",
+          title: spotlightPlayer.name,
+          meta: [spotlightPlayer.team, spotlightPlayer.stat].filter(Boolean).join(" · "),
+        }
+      : {
+          label: "Jogador em alta",
+          title: "Sem jogador destacado",
+          meta: "A API ainda nao trouxe atletas suficientes",
+        },
+    goalHighlight
+      ? {
+          label: "Gol em destaque",
+          title: goalHighlight.scorer,
+          meta: `${goalHighlight.team} · ${goalHighlight.match} · ${goalHighlight.minute}'`,
+        }
+      : {
+          label: "Gol em destaque",
+          title: "Sem gol registrado",
+          meta: "A timeline ainda nao trouxe gols detalhados",
+        },
+  ];
+
   return {
     liveFixture,
     appStats,
@@ -328,6 +375,7 @@ export async function getHomeData(): Promise<HomeData> {
       season: latestSeason || undefined,
     },
     goalHighlight,
+    highlights,
     source: "thesportsdb",
   };
 }

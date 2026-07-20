@@ -48,6 +48,7 @@ type HomeDashboardProps = {
       team: string;
       date: string;
     };
+    highlights: Array<{ label: string; title: string; meta: string }>;
     source: "thesportsdb";
   };
 };
@@ -67,6 +68,7 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
     aiPrompts,
     featuredTeams,
     goalHighlight,
+    highlights,
   } = data;
 
   const spotlightTeam = featuredTeams[0];
@@ -226,6 +228,16 @@ export function HomeDashboard({ data }: HomeDashboardProps) {
           <span>Agente</span>
           <strong>Pergunta direta</strong>
         </Link>
+      </section>
+
+      <section className="highlight-strip" aria-label="Destaques da base">
+        {highlights.map((item) => (
+          <article className="panel highlight-card" key={item.label}>
+            <p className="section-label">{item.label}</p>
+            <h2>{item.title}</h2>
+            <p className="muted">{item.meta}</p>
+          </article>
+        ))}
       </section>
 
       <section className="dashboard-grid editorial-grid">
